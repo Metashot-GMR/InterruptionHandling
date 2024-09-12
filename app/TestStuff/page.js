@@ -15,38 +15,42 @@ speechConfig.speechSynthesisVoiceName = "en-IN-AnanyaNeural";
 
 // Audio configuration setup
 const player = new sdk.SpeakerAudioDestination();
-console.log(player);
+
 const audioConfig = sdk.AudioConfig.fromSpeakerOutput(player);
 
-// Create a SpeechSynthesizer instance
 const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
 
 const TTSPage = () => {
   const [time, setTime] = useState(0);
 
   // Function to start TTS
-  const startTTS = () => {
+  const startTTS = async () => {
+    //Configurations
+    console.log(player.internalAudio.currentTime);
     if (!synthesizer) {
       console.error("Synthesizer not initialized.");
       return;
     }
 
     // Stop any currently playing audio and reset the media source
-    if (!player.isClosed) {
-      player.internalAudio.pause(); // Pause current playback
-      player.internalAudio.currentTime = 0; // Reset to start
-      player.privSourceBuffer.abort(); // Abort appending to the buffer
-    }
 
     console.log(player);
-    console.log(player.internalAudio.currentTime);
-
+    console.log(player.privSourceBuffer);
+    const message =
+      "Hello, this is a sample Text-to-Speech test with interruption handling.";
     synthesizer.speakTextAsync(
-      "Hello, this is a sample Text-to-Speech test with interruption handling.",
+      "Hello, this is a sample Text-to-Speech test with interruption handling. One Two Three Four Five Six Seven Eight Nine Ten Eleven Tweleve Thirteen Fourteen Fifteen.",
       (result) => {
         if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
           console.log("Speech synthesized successfully.");
-          console.log(player.internalAudio.duration);
+          let audioElem = player.internalAudio;
+          let endTime = audioElem.buffered.end(0);
+          console.log(player.internalAudio.buffered);
+          console.log("End Time: ", endTime);
+          console.log("buffer length", audioElem.buffered.length);
+          //player.internalAudio.currentTime = endTime;
+          audioElem.addEventListener("ended", () => {console.log("Ended")});
+          
         } else {
           console.error("Error synthesizing speech:", result.errorDetails);
         }
@@ -55,6 +59,18 @@ const TTSPage = () => {
         console.error("Error synthesizing speech:", error);
       }
     );
+
+    // setTimeout(() => {
+    //   player.close();
+    //   synthesizer.close();
+    //   console.log("Stopped")
+    // }, 2000);
+    // const utterance = new SpeechSynthesisUtterance(message);
+    // speechSynthesis.speak(utterance);
+    // setTimeout(() => {
+    //   speechSynthesis.cancel();
+    //   console.log("Stopped")
+    // }, 100000);
   };
 
   // Function to stop TTS
@@ -62,12 +78,13 @@ const TTSPage = () => {
     if (!synthesizer) {
       console.error("Synthesizer not initialized.");
       return;
+    
     }
 
     // Stop playback and reset
-    player.internalAudio.pause(); // Pause current playback
-    setTime(player.internalAudio.currentTime); // Save current time if needed
-    player.internalAudio.currentTime = 0; // Reset playback to start
+    //player.internalAudio.pause(); // Pause current playback
+    //setTime(player.internalAudio.currentTime); // Save current time if needed
+    //player.internalAudio.currentTime = 0; // Reset playback to start
   };
 
   return (
